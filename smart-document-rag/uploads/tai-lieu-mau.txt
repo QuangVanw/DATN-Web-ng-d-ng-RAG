@@ -1,6 +1,0 @@
-QUY ĐỊNH MƯỢN TÀI LIỆU THƯ VIỆN
-
-Sinh viên được mượn tối đa ba tài liệu cùng lúc. Thời hạn mượn là 14 ngày.
-Sinh viên có thể gia hạn một lần thêm 7 ngày nếu tài liệu chưa được người khác đăng ký.
-
-Khi trả tài liệu, sinh viên mang tài liệu đến quầy lưu thông. Thư viện mở cửa từ thứ Hai đến thứ Sáu.
