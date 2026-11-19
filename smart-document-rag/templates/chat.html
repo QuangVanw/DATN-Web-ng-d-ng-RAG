@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Hỏi đáp AI{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Hỏi đáp AI</h1></div>
+<section class="panel chat-panel" aria-label="Cuộc trò chuyện">
+  <div class="chat-messages">
+    {% if not llm_configured %}
+    <p class="alert alert-warning" role="status">Chưa cấu hình LLM API. Hãy điền LLM_API_KEY và LLM_MODEL trong tệp .env rồi khởi động lại Flask.</p>
+    {% endif %}
+    {% if question or answer or error %}
+      {% if question %}<div class="bubble user-bubble"><strong>Bạn</strong><p>{{ question }}</p></div>{% endif %}
+      {% if answer %}<div class="bubble ai-bubble"><strong>SmartDoc AI</strong><p>{{ answer }}</p></div>{% endif %}
+      {% if error %}<p class="alert alert-danger" role="alert">{{ error }}</p>{% endif %}
+    {% else %}
+      <div class="chat-empty"><span class="brand-mark" aria-hidden="true">✦</span><h2>Đặt câu hỏi về tài liệu</h2><p>Câu trả lời sẽ hiển thị cùng các đoạn nguồn được trích dẫn.</p></div>
+    {% endif %}
+    {% if sources %}
+    <section class="chat-sources">
+      <h2>Nguồn tài liệu</h2>
+      <ul class="result-list">
+      {% for source in sources %}
+        <li><a href="{{ url_for('document_detail', document_id=source.document_id) }}">{{ source.filename }}</a><small class="d-block text-secondary">Đoạn {{ source.chunk_index }}</small><p>{{ source.content }}</p></li>
+      {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+  <form action="{{ url_for('chat') }}" method="post" class="chat-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label class="form-label" for="question">Câu hỏi</label>
+    <div class="input-group">
+      <input class="form-control" id="question" name="question" value="{{ question }}" maxlength="{{ question_limit }}" required>
+      <button class="btn btn-primary" type="submit">Gửi câu hỏi</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

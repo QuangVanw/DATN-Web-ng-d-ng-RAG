@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Tài liệu của tôi{% endblock %}
+{% block content %}
+{% if document is defined %}
+<div class="page-heading">
+  <a href="{{ url_for('documents') }}">← Quay lại danh sách</a>
+  <h1>{{ document.filename }}</h1>
+  <p class="text-secondary">{{ document.file_type | upper }} · {{ document.size_bytes | filesizeformat(true) }} · {{ document.created_at | document_date('%d/%m/%Y %H:%M') }}</p>
+</div>
+<section class="panel">
+  <div class="section-heading">
+    <h2>Nội dung trích xuất</h2>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="{{ url_for('download_document', document_id=document.id) }}">Tải xuống</a>
+      <form action="{{ url_for('delete_document', document_id=document.id) }}" method="post" data-confirm-delete>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="btn btn-outline-danger btn-sm" type="submit">Xóa tài liệu</button>
+      </form>
+    </div>
+  </div>
+  <pre class="document-text">{{ document.content }}</pre>
+</section>
+{% else %}
+<div class="page-heading"><h1>Tài liệu của tôi</h1></div>
+<section class="panel mb-4" id="upload">
+  <h2>Tải tài liệu lên</h2>
+  <form action="{{ url_for('upload_document') }}" method="post" enctype="multipart/form-data" data-upload>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="file-picker">
+      <span class="upload-icon" aria-hidden="true">↑</span>
+      <label class="btn btn-outline-primary" for="document">Chọn tệp</label>
+      <input class="file-input" id="document" type="file" name="document" accept=".pdf,.docx,.txt"
+             aria-describedby="file-help" multiple required>
+      <p id="file-help" class="text-secondary my-2">PDF có lớp văn bản, Word DOCX hoặc TXT UTF-8. Tối đa {{ config.MAX_UPLOAD_FILES }} tệp mỗi lượt, 10 MB mỗi tệp.</p>
+      <ul class="list-unstyled mb-0" data-file-list></ul>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-3 mt-3">
+      <button class="btn btn-primary" type="submit">Tải lên</button>
+      <span class="text-secondary" aria-live="polite" data-upload-status></span>
+    </div>
+  </form>
+</section>
+{% if results %}
+<section class="panel mb-4">
+  <h2>Kết quả tải lên</h2>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th scope="col">Tên tệp</th><th scope="col">Định dạng</th><th scope="col">Kích thước</th><th scope="col">Trạng thái</th></tr></thead>
+      <tbody>
+      {% for result in results %}
+      <tr>
+        <td>{% if result.id %}<a href="{{ url_for('document_detail', document_id=result.id) }}">{{ result.filename }}</a>{% else %}{{ result.filename }}{% endif %}</td>
+        <td><span class="format-pill">{{ result.file_type }}</span></td>
+        <td>{{ result.size | filesizeformat(true) if result.size is not none else '—' }}</td>
+        <td>{% if result.error %}<span class="text-danger">{{ result.error }}</span>{% else %}<span class="text-success">Đã lưu</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+<section class="panel">
+  <div class="section-heading"><h2>Danh sách tài liệu</h2><span class="text-secondary">{{ documents | length }} tài liệu</span></div>
+  {% if documents %}
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th scope="col">Tên tệp</th><th scope="col">Định dạng</th><th scope="col">Kích thước</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+      <tbody>
+      {% for item in documents %}
+      <tr>
+        <td><a href="{{ url_for('document_detail', document_id=item.id) }}">{{ item.filename }}</a><small class="d-block text-secondary">{{ item.created_at | document_date('%d/%m/%Y %H:%M') }}</small></td>
+        <td><span class="format-pill">{{ item.file_type | upper }}</span></td>
+        <td class="text-nowrap">{{ item.size_bytes | filesizeformat(true) }}</td>
+        <td class="text-success text-nowrap">Đã lưu</td>
+        <td><div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('document_detail', document_id=item.id) }}">Xem</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('download_document', document_id=item.id) }}">Tải xuống</a>
+          <form action="{{ url_for('delete_document', document_id=item.id) }}" method="post" data-confirm-delete>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
+          </form>
+        </div></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-secondary mb-0">Kho tài liệu đang trống.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

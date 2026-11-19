@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "password_field.html" import password_field %}
+{% block title %}Đăng ký{% endblock %}
+{% block content %}
+<section class="panel auth-card">
+  <p class="brand auth-brand"><span class="brand-mark" aria-hidden="true">✦</span>SmartDoc </p>
+  <h1>Đăng ký</h1>
+  {% if ready %}
+  <form method="post" class="vstack gap-3" data-register>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div><label class="form-label" for="fullname">Họ tên</label><input class="form-control" id="fullname" name="fullname" value="{{ fields.get('fullname', '') }}" autocomplete="name" maxlength="120" required autofocus></div>
+    <div><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" value="{{ fields.get('email', '') }}" autocomplete="email" maxlength="254" required></div>
+    <div>
+      <label class="form-label" for="username">Tên đăng nhập</label>
+      <input class="form-control" id="username" name="username" value="{{ fields.get('username', '') }}" autocomplete="username"
+             minlength="3" maxlength="80" pattern="[A-Za-z0-9_.\-]{3,80}" aria-describedby="username-help" required>
+      <div class="form-text" id="username-help">Từ 3 đến 80 ký tự gồm chữ không dấu, số, dấu chấm, gạch dưới hoặc gạch ngang.</div>
+    </div>
+    {{ password_field("password", "Mật khẩu", "new-password", 8) }}
+    <p class="form-text mt-0 mb-0">Mật khẩu có ít nhất 8 ký tự.</p>
+    {{ password_field("confirm_password", "Xác nhận mật khẩu", "new-password", 8) }}
+    <button class="btn btn-primary" type="submit">Tạo tài khoản</button>
+  </form>
+  {% else %}
+  <p class="alert alert-warning" role="status">Đăng ký sẽ mở sau khi quản trị viên cập nhật cơ sở dữ liệu.</p>
+  {% endif %}
+  <p class="mb-0 mt-3">Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập</a></p>
+</section>
+{% endblock %}

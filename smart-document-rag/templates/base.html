@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Quản lý tài liệu{% endblock %} · SmartDoc AI</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
+  <script src="{{ asset_url('js/main.js') }}" defer></script>
+</head>
+<body>
+{% if g.account %}
+{% set pages = [
+  ('index', '◫', 'Tổng quan'),
+  ('documents', '▤', 'Tài liệu của tôi'),
+  ('search', '⌕', 'Tìm kiếm'),
+  ('chat', '✦', 'Hỏi đáp AI'),
+  ('summary', '≡', 'Tóm tắt tài liệu')
+] %}
+{% if g.account.role == 'admin' %}{% set pages = pages + [('admin', '⚙', 'Quản trị')] %}{% endif %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark" aria-hidden="true">✦</span> SmartDoc </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar-content" hidden>Menu</button>
+    </div>
+    <div class="sidebar-content" id="sidebar-content">
+      <nav aria-label="Điều hướng chính">
+        {% for endpoint, icon, name in pages %}
+        {% set active = request.endpoint == endpoint or (endpoint == 'documents' and request.endpoint in ['document_detail', 'upload_document']) %}
+        <a class="nav-item-link{% if active %} active{% endif %}" {% if active %}aria-current="page"{% endif %} href="{{ url_for(endpoint) }}">
+          <span class="nav-icon" aria-hidden="true">{{ icon }}</span>{{ name }}
+        </a>
+        {% endfor %}
+      </nav>
+      <form class="sidebar-logout" action="{{ url_for('logout') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="nav-item-link" type="submit"><span class="nav-icon" aria-hidden="true">↪</span>Đăng xuất</button>
+      </form>
+    </div>
+  </aside>
+  <main class="workspace" id="main-content">
+{% else %}
+  <main class="auth-shell" id="main-content">
+{% endif %}
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <p class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+{% if g.account %}</div>{% endif %}
+</body>
+</html>

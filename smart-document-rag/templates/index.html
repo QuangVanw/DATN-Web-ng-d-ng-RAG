@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Tổng quan{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <h1>Tổng quan</h1>
+  <p class="text-secondary mt-2 mb-0">{{ g.account.fullname or g.account.username }}</p>
+</div>
+<section class="welcome mb-4" aria-label="Thao tác nhanh">
+  <div>
+    <h2>Kho tài liệu của bạn</h2>
+    <p>Tải tài liệu lên để tìm kiếm nội dung và đặt câu hỏi dựa trên nguồn.</p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-light" href="{{ url_for('documents') }}#upload">Tải tài liệu</a>
+      <a class="btn btn-outline-light" href="{{ url_for('chat') }}">Hỏi đáp AI</a>
+    </div>
+  </div>
+  <div class="welcome-art" aria-hidden="true"><span>✦</span><span></span><span></span></div>
+</section>
+<div class="row g-3 mb-4">
+  <div class="col-sm-4"><div class="panel stat h-100"><span>Tài liệu đã lưu</span><strong>{{ document_count }}</strong></div></div>
+  <div class="col-sm-4"><div class="panel stat h-100"><span>Lượt tìm kiếm</span>{% if g.account.legacy %}<span class="stat-note">Chưa có dữ liệu thống kê</span>{% else %}<strong>{{ g.account.search_count }}</strong>{% endif %}</div></div>
+  <div class="col-sm-4"><div class="panel stat h-100"><span>Lượt hỏi đáp</span>{% if g.account.legacy %}<span class="stat-note">Chưa có dữ liệu thống kê</span>{% else %}<strong>{{ g.account.chat_count }}</strong>{% endif %}</div></div>
+</div>
+<section class="panel">
+  <div class="section-heading"><h2>Tài liệu gần đây</h2><a href="{{ url_for('documents') }}">Xem tất cả</a></div>
+  {% if recent %}
+  <ul class="item-list">
+    {% for item in recent %}
+    <li><span class="format-pill">{{ item.file_type | upper }}</span><a href="{{ url_for('document_detail', document_id=item.id) }}">{{ item.filename }}</a><small>{{ item.created_at | document_date('%d/%m/%Y') }}</small></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-secondary mb-0">Kho tài liệu đang trống.</p>
+  {% endif %}
+</section>
+{% endblock %}

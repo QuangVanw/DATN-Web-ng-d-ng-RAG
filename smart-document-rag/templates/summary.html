@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Tóm tắt tài liệu{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Tóm tắt tài liệu</h1></div>
+<section class="panel">
+  {% if not llm_configured %}<p class="alert alert-warning">Chưa cấu hình LLM API. Hãy điền LLM_API_KEY và LLM_MODEL trong tệp .env.</p>{% endif %}
+  <p class="text-secondary">Chức năng tạo bản tóm tắt đang chờ tích hợp.</p>
+  {% if documents %}
+  <form method="get" action="{{ url_for('summary') }}">
+    <label class="form-label" for="document_id">Chọn tài liệu</label>
+    <div class="input-group">
+      <select class="form-select" name="document_id" id="document_id" required>
+        <option value="">Chọn từ kho tài liệu</option>
+        {% for item in documents %}<option value="{{ item.id }}"{% if item.id == selected %} selected{% endif %}>{{ item.filename }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-outline-primary" type="submit">Xem lựa chọn</button>
+    </div>
+    {% for item in documents if item.id == selected %}
+    <p class="mt-3 mb-0">Đã chọn <a href="{{ url_for('document_detail', document_id=item.id) }}">{{ item.filename }}</a>.</p>
+    {% endfor %}
+  </form>
+  {% else %}
+  <p class="mb-0">Chưa có tài liệu để chọn. <a href="{{ url_for('documents') }}#upload">Tải tài liệu</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}

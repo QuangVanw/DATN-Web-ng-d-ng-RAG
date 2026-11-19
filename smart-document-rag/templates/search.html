@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Tìm kiếm{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Tìm kiếm</h1></div>
+<section class="panel mb-4">
+  <form action="{{ url_for('search') }}" method="get">
+    <label class="form-label" for="keyword">Từ khóa hoặc cụm từ trong nội dung tài liệu</label>
+    <div class="input-group">
+      <input class="form-control" id="keyword" name="q" type="search" value="{{ keyword }}" maxlength="200" required>
+      <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+    </div>
+  </form>
+  {% if error %}<p class="alert alert-danger mt-3 mb-0" role="alert">{{ error }}</p>{% endif %}
+</section>
+{% if keyword and not error %}
+<section class="panel">
+  <h2>Kết quả tìm kiếm</h2>
+  {% if results %}
+  <ul class="result-list">
+    {% for result in results %}
+    <li>
+      <div class="d-flex flex-wrap gap-2 align-items-center"><span class="format-pill">{{ result.file_type | upper }}</span><a href="{{ url_for('document_detail', document_id=result.id) }}">{{ result.filename }}</a></div>
+      <p>{{ result.snippet }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% if has_more %}<p class="text-secondary mb-0">Đang hiển thị 50 tài liệu mới nhất trong kết quả. Nhập cụm từ cụ thể hơn để thu hẹp tìm kiếm.</p>{% endif %}
+  {% else %}
+  <p class="text-secondary mb-0">Không tìm thấy tài liệu chứa “{{ keyword }}”.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

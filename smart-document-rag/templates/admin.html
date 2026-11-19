@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Quản trị{% endblock %}
+{% block content %}
+<div class="page-heading"><h1>Quản trị</h1></div>
+<div class="row g-3 mb-4">
+  <div class="col-sm-6"><div class="panel stat"><span>Tài khoản quản trị</span><strong>{{ admins | length }}</strong></div></div>
+  <div class="col-sm-6"><div class="panel stat"><span>Tài liệu trong hệ thống</span><strong>{{ document_count }}</strong></div></div>
+</div>
+<section class="panel">
+  <h2>Quản trị viên</h2>
+  <ul class="item-list">
+    {% for account in admins %}<li>{{ account.username }}</li>{% endfor %}
+  </ul>
+</section>
+{% endblock %}
