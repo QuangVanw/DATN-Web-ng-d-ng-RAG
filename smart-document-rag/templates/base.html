@@ -7,15 +7,21 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ asset_url('css/style.css') }}">
+  {% if not g.account or g.account.role == 'user' %}<link rel="stylesheet" href="{{ asset_url('css/personal.css') }}">{% endif %}
   <script src="{{ asset_url('js/main.js') }}" defer></script>
 </head>
 <body>
-{% if g.account %}
+{% if g.account and g.account.role == 'user' %}
+<div class="app-shell user-shell">
+  {% include "user_navigation.html" %}
+  <main class="workspace" id="main-content">
+    {% include "user_header.html" %}
+{% elif g.account %}
 {% set pages = [
   ('index', '◫', 'Tổng quan'),
   ('documents', '▤', 'Tài liệu của tôi'),
   ('search', '⌕', 'Tìm kiếm'),
-  ('chat', '✦', 'Hỏi đáp AI'),
+  ('chat', '✦', 'Hỏi đáp tài liệu'),
   ('summary', '≡', 'Tóm tắt tài liệu')
 ] %}
 {% if g.account.role == 'admin' %}{% set pages = pages + [('admin', '⚙', 'Quản trị')] %}{% endif %}
@@ -42,7 +48,7 @@
   </aside>
   <main class="workspace" id="main-content">
 {% else %}
-  <main class="auth-shell" id="main-content">
+  <main class="auth-shell auth-shell-wide" id="main-content">
 {% endif %}
     {% for category, message in get_flashed_messages(with_categories=true) %}
     <p class="alert alert-{{ 'danger' if category == 'error' else 'success' }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>

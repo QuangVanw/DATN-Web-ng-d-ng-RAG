@@ -47,6 +47,10 @@ def _docx_text(data):
 
 
 def _collect_text(parts, separator):
+    return separator.join(_bounded_parts(parts, separator))
+
+
+def _bounded_parts(parts, separator):
     result = []
     length = 0
     for part in parts:
@@ -54,10 +58,10 @@ def _collect_text(parts, separator):
         if length > MAX_TEXT_LENGTH + len(separator):
             raise ValueError("Văn bản trích xuất vượt quá giới hạn.")
         result.append(part)
-    return separator.join(result)
+    return result
 
 
-def _pdf_text(data):
+def _pdf_pages(data):
     if not data.startswith(b"%PDF-"):
         raise ValueError("Tệp không có định dạng PDF hợp lệ.")
     try:
@@ -66,7 +70,7 @@ def _pdf_text(data):
             raise ValueError("PDF có mật khẩu không được hỗ trợ.")
         if len(reader.pages) > 200:
             raise ValueError("PDF được phép có tối đa 200 trang.")
-        return _collect_text((page.extract_text() for page in reader.pages), "\n\n")
+        return _bounded_parts((page.extract_text() for page in reader.pages), "\n\n")
     except (PyPdfError, OSError, RecursionError) as error:
         raise ValueError("Không đọc được tệp PDF.") from error
 
@@ -86,7 +90,7 @@ def extract_document(upload, size_limit):
     if not filename or len(filename) > 255 or not filename.isprintable():
         raise ValueError("Tên tài liệu không hợp lệ.")
     file_type = PurePosixPath(filename).suffix.lower().lstrip(".")
-    readers = {"pdf": _pdf_text, "docx": _docx_text, "txt": _txt_text}
+    readers = {"pdf": _pdf_pages, "docx": _docx_text, "txt": _txt_text}
     if file_type not in readers:
         raise ValueError("Chỉ chấp nhận tài liệu PDF, DOCX hoặc TXT.")
 
@@ -94,11 +98,13 @@ def extract_document(upload, size_limit):
     if len(data) > size_limit:
         raise ValueError("Tệp vượt quá giới hạn 10 MB.")
 
-    content = readers[file_type](data).strip()
+    extracted = readers[file_type](data)
+    pages = extracted if file_type == "pdf" else None
+    content = ("\n\n".join(pages) if pages is not None else extracted).strip()
     if not content:
         if file_type == "pdf":
             raise ValueError("PDF không có văn bản có thể đọc. Tệp scan cần OCR.")
         raise ValueError("Tài liệu không có văn bản để lưu.")
     if len(content) > MAX_TEXT_LENGTH:
         raise ValueError("Văn bản trích xuất vượt quá giới hạn.")
-    return filename, file_type, len(data), content, data
+    return filename, file_type, len(data), content, data, pages

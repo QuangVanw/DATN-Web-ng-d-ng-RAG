@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Trang chủ{% endblock %}
+{% block content %}
+{% set display_name = g.account.fullname or g.account.username %}
+<section class="user-hero">
+  <div>
+    <h1>Xin chào, {{ display_name }}</h1>
+    <form action="{{ url_for('search') }}" method="get" class="user-search">
+      <label for="dashboard-search">Tìm trong kho tài liệu của bạn</label>
+      <div class="user-search-box">
+        <span aria-hidden="true">⌕</span>
+        <input class="form-control" name="q" id="dashboard-search" type="search" placeholder="Nhập từ khóa hoặc cụm từ" maxlength="200" required>
+        <button class="btn sd-primary" type="submit">Tìm kiếm</button>
+      </div>
+    </form>
+  </div>
+  <div class="user-hero-art" aria-hidden="true"><i></i><i></i><span>✦</span></div>
+</section>
+{% set shortcuts = [
+  (url_for('documents') ~ '#upload', '↑', 'Tải tài liệu', 'Thêm PDF, DOCX hoặc TXT'),
+  (url_for('search'), '⌕', 'Tìm kiếm thông minh', 'Tìm từ khóa trong tài liệu'),
+  (url_for('chat'), '✦', 'Trợ lý tài liệu', 'Hỏi và xem đoạn trích'),
+  (url_for('summary'), '≡', 'Tóm tắt tài liệu', 'Xem trạng thái tính năng')
+] %}
+<section class="user-quick" aria-labelledby="user-quick-heading">
+  <h2 id="user-quick-heading">Truy cập nhanh</h2>
+  <div class="user-actions">
+    {% for href, icon, label, description in shortcuts %}
+    <a class="user-action" href="{{ href }}">
+      <span class="user-action-icon{% if icon == '✦' %} user-action-ai{% endif %}" aria-hidden="true">{{ icon }}</span>
+      <span><strong>{{ label }}</strong><small>{{ description }}</small></span>
+      <span class="user-action-arrow" aria-hidden="true">↗</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+<div class="user-overview">
+  <section class="user-card" aria-labelledby="recent-title">
+    <div class="section-heading">
+      <h2 id="recent-title">Tài liệu gần đây</h2>
+      {% if recent %}<a href="{{ url_for('documents') }}">Xem tất cả</a>{% endif %}
+    </div>
+    {% if recent %}
+    <ul class="item-list user-recent">
+      {% for item in recent %}
+      <li>
+        <span class="format-pill">{{ item.file_type | upper }}</span>
+        <a href="{{ url_for('document_detail', document_id=item.id) }}">{{ item.filename }}</a>
+        <small>{{ item.created_at | document_date }}</small>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="user-empty">
+      <span class="user-action-icon" aria-hidden="true">▤</span>
+      <p>Kho tài liệu của bạn đang trống.</p>
+      <a class="btn sd-primary" href="{{ url_for('documents') }}#upload">Tải tài liệu đầu tiên</a>
+    </div>
+    {% endif %}
+  </section>
+  <section class="user-card" aria-labelledby="activity-title">
+    <h2 id="activity-title">Hoạt động của bạn</h2>
+    <dl class="user-metrics">
+      <div><dt>Tài liệu</dt><dd>{{ document_count }}</dd></div>
+      <div><dt>Lượt tìm kiếm</dt><dd>{{ g.account.search_count }}</dd></div>
+      <div><dt>Lượt hỏi đáp</dt><dd>{{ g.account.chat_count }}</dd></div>
+    </dl>
+  </section>
+</div>
+{% endblock %}

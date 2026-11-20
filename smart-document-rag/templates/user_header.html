@@ -1,0 +1,19 @@
+{% set name = g.account.fullname or g.account.username %}
+<header class="user-topbar">
+  <span class="user-topbar-label">Không gian cá nhân</span>
+  <details class="user-account" id="account-menu">
+    <summary aria-label="Menu tài khoản của {{ name }}">
+      <span class="user-avatar" aria-hidden="true">{{ name[0] | upper }}</span>
+      <span class="user-account-name">{{ name }}</span>
+      <span aria-hidden="true">⌄</span>
+    </summary>
+    <div class="user-account-panel">
+      <strong>{{ name }}</strong>
+      <span class="sd-muted">@{{ g.account.username }}</span>
+      <form action="{{ url_for('logout') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Đăng xuất</button>
+      </form>
+    </div>
+  </details>
+</header>

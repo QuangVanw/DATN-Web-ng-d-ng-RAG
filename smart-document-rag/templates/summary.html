@@ -3,7 +3,6 @@
 {% block content %}
 <div class="page-heading"><h1>Tóm tắt tài liệu</h1></div>
 <section class="panel">
-  {% if not llm_configured %}<p class="alert alert-warning">Chưa cấu hình LLM API. Hãy điền LLM_API_KEY và LLM_MODEL trong tệp .env.</p>{% endif %}
   <p class="text-secondary">Chức năng tạo bản tóm tắt đang chờ tích hợp.</p>
   {% if documents %}
   <form method="get" action="{{ url_for('summary') }}">

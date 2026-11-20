@@ -1,0 +1,106 @@
+{
+  "documents": [
+    {
+      "filename": "thu-vien.txt",
+      "content": "Sinh viên mượn tối đa ba cuốn sách tại thư viện. Thời hạn mượn sách là 14 ngày."
+    },
+    {
+      "filename": "hoc-phi.txt",
+      "content": "Học phí học kỳ được đóng qua ngân hàng trước ngày 15 tháng 9. Sau khi chuyển khoản, sinh viên lưu biên lai."
+    },
+    {
+      "filename": "ky-tuc-xa.txt",
+      "content": "Giờ đóng cửa ký túc xá là 22 giờ. Khách đến thăm đăng ký tại quầy bảo vệ."
+    },
+    {
+      "filename": "thuc-tap.txt",
+      "content": "Thời gian thực tập là tám tuần. Đơn vị tiếp nhận xác nhận nhật ký thực tập mỗi tuần."
+    },
+    {
+      "filename": "do-an.txt",
+      "content": "Nộp báo cáo đồ án dưới dạng PDF kèm mã nguồn. Bảo vệ đồ án theo lịch của khoa."
+    },
+    {
+      "filename": "hoc-bong.txt",
+      "content": "Học bổng khuyến khích học tập yêu cầu điểm trung bình tối thiểu 3,2 và điểm rèn luyện tốt."
+    },
+    {
+      "filename": "phong-may.txt",
+      "content": "Phòng máy mở từ thứ hai đến thứ sáu lúc 8 giờ. Người sử dụng đăng nhập bằng tài khoản trường."
+    },
+    {
+      "filename": "bao-hiem.txt",
+      "content": "Bảo hiểm y tế sinh viên có hiệu lực từ ngày 1 tháng 1. Khi khám bệnh cần thẻ bảo hiểm và giấy tờ tùy thân."
+    },
+    {
+      "filename": "thi-lai.txt",
+      "content": "Đăng ký thi lại tại cổng đào tạo. Lệ phí thi lại được thanh toán sau khi xác nhận môn thi."
+    },
+    {
+      "filename": "the-sinh-vien.txt",
+      "content": "Cấp lại thẻ sinh viên tại phòng công tác sinh viên. Khi mất thẻ cần chuẩn bị ảnh chân dung."
+    }
+  ],
+  "questions": [
+    {
+      "question": "Thời hạn mượn sách thư viện là bao nhiêu ngày?",
+      "expected": "thu-vien.txt"
+    },
+    {
+      "question": "Đóng học phí học kỳ qua đâu?",
+      "expected": "hoc-phi.txt"
+    },
+    {
+      "question": "Gio dong cua ky tuc xa?",
+      "expected": "ky-tuc-xa.txt"
+    },
+    {
+      "question": "Thời gian thực tập bao lâu?",
+      "expected": "thuc-tap.txt"
+    },
+    {
+      "question": "Nộp báo cáo đồ án định dạng gì?",
+      "expected": "do-an.txt"
+    },
+    {
+      "question": "Điểm trung bình tối thiểu để nhận học bổng?",
+      "expected": "hoc-bong.txt"
+    },
+    {
+      "question": "Phong may mo luc may gio?",
+      "expected": "phong-may.txt"
+    },
+    {
+      "question": "Bảo hiểm y tế có hiệu lực từ ngày nào?",
+      "expected": "bao-hiem.txt"
+    },
+    {
+      "question": "Đăng ký thi lại ở đâu?",
+      "expected": "thi-lai.txt"
+    },
+    {
+      "question": "Cấp lại thẻ sinh viên ở đâu?",
+      "expected": "the-sinh-vien.txt"
+    },
+    {
+      "question": "Khi mất thẻ cần chuẩn bị ảnh gì?",
+      "expected": "the-sinh-vien.txt"
+    },
+    {
+      "question": "Khách đến thăm đăng ký ở quầy nào?",
+      "expected": "ky-tuc-xa.txt"
+    },
+    {
+      "question": "Quỹ đạo Sao Hải Vương? ",
+      "expected": null
+    },
+    {
+      "question": "Nhiệt hạch tokamak plasma?",
+      "expected": null
+    },
+    {
+      "question": "!!!!",
+      "expected": null
+    }
+  ]
+}

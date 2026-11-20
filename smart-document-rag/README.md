@@ -1,6 +1,6 @@
 # Hệ thống tìm kiếm tài liệu thông minh
 
-Đồ án Flask và MySQL. Giai đoạn 1 cung cấp đăng nhập quản trị, tải lên, liệt kê, xem văn bản và xóa tài liệu PDF/TXT. MySQL lưu tên, dung lượng, loại tệp và văn bản trích xuất. Thư mục `uploads/` chứa dữ liệu mẫu để tải lên từ trình duyệt. Giai đoạn 2 thêm tìm kiếm từ khóa. Giai đoạn 3 thêm hỏi đáp RAG.
+Đồ án Flask và MySQL. Giai đoạn 1 cung cấp đăng nhập quản trị, tải lên, liệt kê, xem văn bản và xóa tài liệu PDF/TXT. MySQL lưu tên, dung lượng, loại tệp và văn bản trích xuất. Thư mục `uploads/` chứa dữ liệu mẫu để tải lên từ trình duyệt. Giai đoạn 2 thêm tìm kiếm từ khóa. Trang hỏi đáp hiện dùng truy xuất đoạn trích bằng TF-IDF.
 
 ## Import cơ sở dữ liệu bằng phpMyAdmin
 
@@ -9,7 +9,7 @@
 3. Ở trang chính phpMyAdmin, mở thẻ **Import / Nhập**, chọn tệp `database/schema.sql`, đặt bộ ký tự của tệp là **utf-8** và định dạng là **SQL**, rồi nhấn **Import** hoặc **Go**.
 4. Chọn `smart_document_rag` ở thanh bên và mở **Structure / Cấu trúc**. Bảng `admins` có các cột `id`, `username`, `password_hash`. Bảng `documents` có các cột `id`, `filename`, `file_type`, `size_bytes`, `content`, `created_at`. Cột `content` lưu toàn bộ văn bản trích xuất dưới dạng `MEDIUMTEXT`.
 
-Bảng `document_chunks` lưu các đoạn văn dùng cho RAG. Schema dùng InnoDB và khai báo `utf8mb4` trực tiếp cho các bảng mới. Khi import lại, `IF NOT EXISTS` giữ các bảng và bản ghi hiện có. Với bảng có từ trước, phpMyAdmin có thể báo bảng đã tồn tại. Nếu bảng cũ dùng cấu trúc hoặc bộ ký tự khác, cần đối chiếu và lập kế hoạch chuyển đổi riêng.
+Bảng `document_chunks` lưu các đoạn văn dùng cho hỏi đáp. Schema dùng InnoDB và khai báo `utf8mb4` trực tiếp cho các bảng mới. Khi import lại, `IF NOT EXISTS` giữ các bảng và bản ghi hiện có. Với bảng có từ trước, phpMyAdmin có thể báo bảng đã tồn tại. Nếu bảng cũ dùng cấu trúc hoặc bộ ký tự khác, cần đối chiếu và lập kế hoạch chuyển đổi riêng.
 
 ## Chạy Flask trên Windows
 
@@ -60,15 +60,25 @@ Khởi động Flask và mở http://127.0.0.1:5000:
 
 Nếu Flask báo lỗi khi kết nối, kiểm tra dịch vụ MySQL, thông tin trong `.env` và việc chạy schema. TXT được đọc dưới dạng UTF-8, còn PDF có mật khẩu hoặc trên 200 trang sẽ bị từ chối.
 
-## Hỏi đáp RAG
+## Hỏi đáp tài liệu bằng truy xuất đoạn trích
 
-1. Import lại `database/schema.sql` qua phpMyAdmin để tạo bảng `document_chunks`. Các bảng và bản ghi đã có được giữ nguyên.
-2. Chạy lại `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` trong PowerShell.
-3. Bổ sung `LLM_API_KEY` và `LLM_MODEL` vào tệp `.env` theo tài khoản của nhà cung cấp. Nếu dùng nhà cung cấp tương thích Chat Completions khác, đặt `LLM_API_URL` thành URL đầy đủ của endpoint.
-4. Khởi động lại Flask, đăng nhập và chọn **Hỏi đáp**. Ví dụ, tải `uploads/tai-lieu-mau.txt` rồi hỏi “Thời hạn mượn tài liệu là bao nhiêu ngày?”. Đối chiếu câu trả lời với đoạn trích dưới mục **Nguồn**.
-5. Thử câu hỏi ngoài kho tài liệu, chẳng hạn “Quỹ đạo Sao Hải Vương có gì đặc biệt?”. Khi không có đoạn đạt ngưỡng, Flask báo thiếu thông tin và bỏ qua API.
+Trang **Hỏi đáp tài liệu** (`/chat`) dùng scikit-learn để so sánh câu hỏi với các đoạn văn theo TF-IDF và cosine similarity. Tiếng Việt được chuẩn hóa hoa thường, có dấu và không dấu. Mô hình dùng cả âm tiết đơn và cặp âm tiết liền kề để giữ thêm tín hiệu từ các cụm như “thư viện”. Hệ thống trả tối đa ba đoạn trên ngưỡng 0,18, kèm nguồn, hoặc báo không tìm thấy nội dung phù hợp. Đây là hỏi đáp trích xuất. Hệ thống hiển thị văn bản từ tài liệu và không có bước sinh câu trả lời của RAG.
 
-Khi nhận câu hỏi, Flask chia các tài liệu chưa lập chỉ mục thành đoạn tối đa 900 ký tự, có phần chồng lấn tối đa 120 ký tự, rồi lưu vào MariaDB. TF-IDF và cosine similarity xếp hạng các đoạn, tối đa bốn đoạn đạt ngưỡng được gửi cùng câu hỏi tới API. Một tài liệu bị xóa sẽ kéo theo các đoạn tương ứng. Truy xuất dựa trên từ vựng và có thể bỏ sót các câu diễn đạt bằng từ đồng nghĩa. Câu hỏi và các đoạn được chọn được gửi tới nhà cung cấp API.
+PDF, DOCX và TXT mới được chia đoạn và lưu cùng giao dịch tải lên. Tài liệu cũ có sẵn đoạn sẽ dùng lại dữ liệu đó. Nếu chưa có đoạn, Flask chia nội dung cũ trong bộ nhớ khi tra cứu. Nếu cần hiển thị trang cho PDF tải lên sau này, duyệt rồi import [migration 004](database/migrations/004_chunk_page_number.sql). Nếu chưa áp dụng migration, trang hỏi đáp vẫn hiển thị tên tài liệu và số đoạn.
+
+Bật MySQL trong XAMPP và khởi động lại đúng Flask của dự án:
+
+```powershell
+cd C:\DATN\smart-document-rag
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m flask --app app run --port 5001
+```
+
+Mở http://127.0.0.1:5001/chat sau khi đăng nhập. Tải `uploads/tai-lieu-mau.txt` lên rồi hỏi “Thời hạn mượn tài liệu là bao nhiêu ngày?”. Thử thêm “Quỹ đạo Sao Hải Vương?” để kiểm tra trạng thái không tìm thấy. Chạy bộ kiểm thử 10 tài liệu và 15 câu hỏi bằng lệnh:
+
+```powershell
+.\.venv\Scripts\python.exe -B -m unittest discover -s tests -v
+```
 
 ## SmartDoc AI — chuẩn bị nâng cấp
 

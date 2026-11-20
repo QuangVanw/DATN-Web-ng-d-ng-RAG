@@ -13,9 +13,6 @@ class Config:
     MYSQL_USER = os.getenv("MYSQL_USER", "root")
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
     MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "smart_document_rag")
-    LLM_API_URL = os.getenv("LLM_API_URL", "https://api.openai.com/v1/chat/completions")
-    LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-    LLM_MODEL = os.getenv("LLM_MODEL", "")
     MAX_UPLOAD_BYTES = 10 * 1024 * 1024
     MAX_UPLOAD_FILES = 10
     MAX_CONTENT_LENGTH = 128 * 1024

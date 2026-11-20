@@ -1,0 +1,14 @@
+{% macro error_message(id, errors) %}
+  {% if errors and errors.get(id) %}<p class="sd-field-error" id="{{ id }}-error" role="alert">{{ errors[id] }}</p>{% endif %}
+{% endmacro %}
+
+{% macro field(id, label, value='', type='text', autocomplete='', maxlength=80, errors=none) %}
+<div class="sd-field">
+  <label class="form-label" for="{{ id }}">{{ label }}</label>
+  <input class="form-control" id="{{ id }}" name="{{ id }}" type="{{ type }}" value="{{ value }}"
+         autocomplete="{{ autocomplete }}" maxlength="{{ maxlength }}" required
+         {% if id == 'username' and request.endpoint == 'register' %}minlength="3" pattern="[A-Za-z0-9_.\-]{3,80}"{% endif %}
+         {% if errors and errors.get(id) %}aria-invalid="true" aria-describedby="{{ id }}-error"{% endif %}>
+  {{ error_message(id, errors) }}
+</div>
+{% endmacro %}

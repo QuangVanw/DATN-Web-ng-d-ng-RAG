@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-layout">
+  <aside class="auth-intro" aria-labelledby="auth-intro-title">
+    <a class="sd-brand" href="{{ url_for('login') }}"><span class="sd-brand-icon" aria-hidden="true">✦</span>SmartDoc</a>
+    <div class="auth-intro-copy">
+      <h2 id="auth-intro-title">Tài liệu của bạn,<br>trong tầm tay.</h2>
+      <p>Sắp xếp tài liệu, tìm nội dung và hỏi đáp theo nguồn trong một không gian riêng.</p>
+    </div>
+    <div class="auth-illustration" aria-hidden="true">
+      <div class="illustration-sheet sheet-back"></div>
+      <div class="illustration-sheet sheet-front"><i></i><i></i><i></i><i></i></div>
+      <div class="illustration-search">⌕</div>
+      <span class="illustration-spark">✦</span>
+    </div>
+  </aside>
+  <section class="auth-form-pane">
+    <div class="auth-form-content">{% block auth_form %}{% endblock %}</div>
+  </section>
+</div>
+{% endblock %}

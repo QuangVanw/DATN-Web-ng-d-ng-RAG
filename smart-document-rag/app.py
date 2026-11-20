@@ -10,7 +10,7 @@ import click
 from flask import (
     Flask, abort, flash, g, redirect, render_template, request, send_file, session, url_for,
 )
-from pymysql.err import IntegrityError, MySQLError, ProgrammingError
+from pymysql.err import IntegrityError, MySQLError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import models
@@ -31,18 +31,18 @@ def login_required(view):
 
 def registration_error(fields, password, confirmation):
     if not 1 <= len(fields["fullname"]) <= 120 or not fields["fullname"].isprintable():
-        return "Họ tên phải có từ 1 đến 120 ký tự."
+        return "fullname", "Họ tên phải có từ 1 đến 120 ký tự."
     if not re.fullmatch(r"[a-zA-Z0-9_.-]{3,80}", fields["username"]):
-        return "Tên đăng nhập cần từ 3 đến 80 ký tự gồm chữ không dấu, số, dấu chấm, gạch dưới hoặc gạch ngang."
+        return "username", "Tên đăng nhập cần từ 3 đến 80 ký tự gồm chữ không dấu, số, dấu chấm, gạch dưới hoặc gạch ngang."
     if len(fields["email"]) > 254 or not re.fullmatch(
         r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
         fields["email"],
     ):
-        return "Hãy nhập địa chỉ email hợp lệ."
+        return "email", "Hãy nhập địa chỉ email hợp lệ."
     if not 8 <= len(password) <= 128:
-        return "Mật khẩu phải có từ 8 đến 128 ký tự."
+        return "password", "Mật khẩu phải có từ 8 đến 128 ký tự."
     if password != confirmation:
-        return "Mật khẩu xác nhận không khớp."
+        return "confirm_password", "Mật khẩu xác nhận không khớp."
     return None
 
 
@@ -140,8 +140,11 @@ def create_app(test_config=None):
                 session.clear()
                 session["user_id" if migrated else "admin_id"] = account["id"]
                 return redirect(url_for("index"))
-            flash("Tên đăng nhập hoặc mật khẩu không đúng.", "error")
-        return render_template("login.html")
+            return render_template(
+                "login.html", username=username,
+                errors={"password": "Tên đăng nhập hoặc mật khẩu không đúng."},
+            )
+        return render_template("login.html", username="", errors={})
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
@@ -159,8 +162,10 @@ def create_app(test_config=None):
             confirmation = request.form.get("confirm_password", "")
             error = registration_error(fields, password, confirmation)
             if error:
-                flash(error, "error")
-                return render_template("register.html", ready=ready, fields=fields), 400
+                field, message = error
+                return render_template(
+                    "register.html", ready=ready, fields=fields, errors={field: message}
+                ), 400
             try:
                 models.register_user(
                     fields["fullname"], fields["username"], fields["email"],
@@ -169,8 +174,13 @@ def create_app(test_config=None):
             except IntegrityError as exc:
                 if exc.args[0] != 1062:
                     raise
-                flash("Tên đăng nhập hoặc email đã được sử dụng.", "error")
-                return render_template("register.html", ready=ready, fields=fields), 409
+                if models.find_user(fields["username"]):
+                    errors = {"username": "Tên đăng nhập đã được sử dụng."}
+                else:
+                    errors = {"email": "Email đã được sử dụng."}
+                return render_template(
+                    "register.html", ready=ready, fields=fields, errors=errors,
+                ), 409
             flash("Đăng ký thành công. Bạn có thể đăng nhập ngay.", "success")
             return redirect(url_for("login"), code=303)
         status = 503 if request.method == "POST" else 200
@@ -186,8 +196,11 @@ def create_app(test_config=None):
     @app.get("/")
     @login_required
     def index():
-        documents = models.list_documents(g.account, own=True)
-        return render_template("index.html", document_count=len(documents), recent=documents[:5])
+        recent = models.list_documents(g.account, own=True, limit=5)
+        template = "user_dashboard.html" if g.account["role"] == "user" else "index.html"
+        return render_template(
+            template, document_count=models.count_documents(g.account, own=True), recent=recent,
+        )
 
     @app.get("/documents")
     @login_required
@@ -213,8 +226,7 @@ def create_app(test_config=None):
     @app.route("/chat", methods=["GET", "POST"])
     @login_required
     def chat():
-        question = ""
-        answer, error, sources = None, None, []
+        question, error, passages = "", None, []
         status = 200
         if request.method == "POST":
             question = request.form.get("question", "").strip()
@@ -222,40 +234,35 @@ def create_app(test_config=None):
                 error = f"Hãy nhập câu hỏi từ 1 đến {rag.QUESTION_LIMIT} ký tự."
                 status = 400
             else:
-                try:
-                    for document_id in models.unindexed_document_ids(g.account):
-                        models.index_document(document_id, rag.split_document, g.account)
-                    chunks = rag.retrieve(question, models.list_chunks(g.account))
-                    if chunks:
-                        answer, sources = rag.answer_question(question, chunks, app.config)
+                chunks = []
+                for row in models.retrieval_rows(g.account):
+                    if row["chunk_index"] is not None:
+                        chunks.append(row)
                     else:
-                        answer = rag.INSUFFICIENT
-                    models.record_activity(g.account, chat=True)
-                except rag.AnswerError as exc:
-                    error = str(exc)
-                    status = 503
-                except ProgrammingError as exc:
-                    if exc.args[0] != 1146:
-                        raise
-                    error = "Hãy import lại database/schema.sql để tạo bảng đoạn văn."
-                    status = 503
+                        chunks.extend(
+                            {**row, **chunk} for chunk in rag.make_chunks(row["content"])
+                        )
+
+                passages = rag.retrieve(question, chunks)
+                models.record_activity(g.account, chat=True)
 
         return render_template(
             "chat.html", question=question, question_limit=rag.QUESTION_LIMIT,
-            llm_configured=bool(app.config["LLM_API_KEY"] and app.config["LLM_MODEL"]),
-            answer=answer, sources=sources, error=error,
+            passages=passages, error=error,
         ), status
+
 
     def original_path(document_id):
         return Path(app.instance_path, "originals", str(document_id))
 
     def store_document(document):
-        filename, file_type, size, content, data = document
+        filename, file_type, size, content, data, pages = document
         db = models.connection()
         db.begin()
         path = None
         try:
             document_id = models.create_document(filename, file_type, size, content, g.account)
+            models.insert_chunks(document_id, rag.make_chunks(content, pages))
             destination = original_path(document_id)
             destination.parent.mkdir(parents=True, exist_ok=True)
             with destination.open("xb") as original:
@@ -331,7 +338,6 @@ def create_app(test_config=None):
         selected = request.args.get("document_id", type=int)
         return render_template(
             "summary.html", documents=documents, selected=selected,
-            llm_configured=bool(app.config["LLM_API_KEY"] and app.config["LLM_MODEL"]),
         )
 
     @app.get("/admin")
@@ -340,7 +346,7 @@ def create_app(test_config=None):
         if g.account["role"] != "admin":
             abort(403, "Trang này chỉ dành cho quản trị viên.")
         return render_template(
-            "admin.html", admins=models.list_admins(), document_count=len(models.list_documents(g.account))
+            "admin.html", admins=models.list_admins(), document_count=models.count_documents(g.account)
         )
 
 

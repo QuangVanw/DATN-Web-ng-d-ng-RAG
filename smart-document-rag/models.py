@@ -45,15 +45,27 @@ def create_admin(username, password_hash):
         )
 
 
-def list_documents(account, *, own=False):
+def list_documents(account, *, own=False, limit=None):
     scope, params = _document_scope(account, own=own)
+    limit_clause = ""
+    if limit is not None:
+        limit_clause = " LIMIT %s"
+        params = (*params, limit)
     with connection().cursor() as cursor:
         cursor.execute(
             f"""SELECT d.id, d.filename, d.file_type, d.size_bytes, d.created_at
-                FROM documents AS d WHERE {scope} ORDER BY d.id DESC""",
+                FROM documents AS d WHERE {scope} ORDER BY d.id DESC""" + limit_clause,
             params,
         )
         return cursor.fetchall()
+
+
+def count_documents(account, *, own=False):
+    scope, params = _document_scope(account, own=own)
+    with connection().cursor() as cursor:
+        cursor.execute(f"SELECT COUNT(*) AS total FROM documents AS d WHERE {scope}", params)
+        return cursor.fetchone()["total"]
+
 
 
 def find_document(document_id, account):
@@ -111,66 +123,47 @@ def search_documents(keyword, account):
         return cursor.fetchall()
 
 
-def unindexed_document_ids(account):
+def supports_chunk_pages():
+    if "supports_chunk_pages" not in g:
+        with connection().cursor() as cursor:
+            cursor.execute("SHOW COLUMNS FROM document_chunks LIKE 'page_number'")
+            g.supports_chunk_pages = cursor.fetchone() is not None
+    return g.supports_chunk_pages
+
+
+def insert_chunks(document_id, chunks):
+    with connection().cursor() as cursor:
+        if supports_chunk_pages():
+            cursor.executemany(
+                "INSERT INTO document_chunks (document_id, chunk_index, content, page_number) "
+                "VALUES (%s, %s, %s, %s)",
+                [(document_id, c["chunk_index"], c["content"], c["page_number"]) for c in chunks],
+            )
+        else:
+            cursor.executemany(
+                "INSERT INTO document_chunks (document_id, chunk_index, content) VALUES (%s, %s, %s)",
+                [(document_id, c["chunk_index"], c["content"]) for c in chunks],
+            )
+
+
+def retrieval_rows(account):
     scope, params = _document_scope(account)
+    page = "c.page_number" if supports_chunk_pages() else "NULL"
     with connection().cursor() as cursor:
         cursor.execute(
             f"""
-            SELECT id FROM documents AS d
-            WHERE {scope} AND NOT EXISTS (
-                SELECT 1 FROM document_chunks AS c WHERE c.document_id = d.id
-            )
-            ORDER BY id
-            """, params
-        )
-        return [row["id"] for row in cursor.fetchall()]
-
-
-def index_document(document_id, split_document, account):
-    scope, params = _document_scope(account)
-    db = connection()
-    db.begin()
-    try:
-        with db.cursor() as cursor:
-            cursor.execute(
-                f"SELECT d.content FROM documents AS d WHERE d.id = %s AND {scope} FOR UPDATE",
-                (document_id, *params),
-            )
-            document = cursor.fetchone()
-            if document:
-                cursor.execute(
-                    "SELECT 1 FROM document_chunks WHERE document_id = %s LIMIT 1",
-                    (document_id,),
-                )
-                if cursor.fetchone() is None:
-                    rows = [
-                        (document_id, index, text)
-                        for index, text in enumerate(split_document(document["content"]), start=1)
-                    ]
-                    cursor.executemany(
-                        "INSERT INTO document_chunks (document_id, chunk_index, content) "
-                        "VALUES (%s, %s, %s)",
-                        rows,
-                    )
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-
-
-def list_chunks(account):
-    scope, params = _document_scope(account)
-    with connection().cursor() as cursor:
-        cursor.execute(
-            f"""
-            SELECT c.document_id, c.chunk_index, c.content, d.filename
-            FROM document_chunks AS c
-            JOIN documents AS d ON d.id = c.document_id
+            SELECT d.id AS document_id, d.filename, c.chunk_index, {page} AS page_number,
+                   CASE WHEN c.chunk_index IS NULL THEN d.content ELSE c.content END AS content
+            FROM documents AS d
+            LEFT JOIN document_chunks AS c ON c.document_id = d.id
             WHERE {scope}
-            ORDER BY c.document_id, c.chunk_index
-            """, params
+            ORDER BY c.chunk_index IS NULL, d.id, c.chunk_index
+            """,
+            params,
         )
         return cursor.fetchall()
+
+
 
 def supports_docx():
     with connection().cursor() as cursor:

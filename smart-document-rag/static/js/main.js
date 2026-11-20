@@ -70,3 +70,34 @@ if (registrationForm) {
   password.addEventListener("input", validateConfirmation);
   confirmation.addEventListener("input", validateConfirmation);
 }
+
+document.querySelectorAll("[data-auth-form]").forEach((form) => {
+  const button = form.querySelector('button[type="submit"]');
+  const label = button.textContent;
+  form.addEventListener("submit", (event) => {
+    if (button.disabled) {
+      event.preventDefault();
+      return;
+    }
+    button.disabled = true;
+    button.textContent = form.dataset.pending;
+    form.setAttribute("aria-busy", "true");
+  });
+  window.addEventListener("pageshow", () => {
+    button.disabled = false;
+    button.textContent = label;
+    form.removeAttribute("aria-busy");
+  });
+});
+
+const accountLink = document.querySelector("[data-open-account]");
+if (accountLink) {
+  accountLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    const accountMenu = document.getElementById("account-menu");
+    accountMenu.open = true;
+    const summary = accountMenu.querySelector("summary");
+    summary.scrollIntoView({ block: "nearest" });
+    summary.focus();
+  });
+}

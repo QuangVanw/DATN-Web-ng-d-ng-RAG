@@ -1,0 +1,30 @@
+{% set pages = [
+  ('index', '⌂', 'Trang chủ'),
+  ('documents', '▤', 'Kho tài liệu'),
+  ('search', '⌕', 'Tìm kiếm thông minh'),
+  ('chat', '✦', 'Trợ lý tài liệu'),
+  ('summary', '≡', 'Tóm tắt tài liệu')
+] %}
+<aside class="sidebar user-sidebar">
+  <div class="sidebar-head">
+    <a class="sd-brand" href="{{ url_for('index') }}"><span class="sd-brand-icon" aria-hidden="true">✦</span>SmartDoc</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar-content" hidden>Menu</button>
+  </div>
+  <div class="sidebar-content" id="sidebar-content">
+    <nav aria-label="Điều hướng cá nhân">
+      {% for endpoint, icon, name in pages %}
+      {% set active = request.endpoint == endpoint or (endpoint == 'documents' and request.endpoint in ['document_detail', 'upload_document']) %}
+      <a class="nav-item-link{% if active %} active{% endif %}" {% if active %}aria-current="page"{% endif %} href="{{ url_for(endpoint) }}">
+        <span class="nav-icon" aria-hidden="true">{{ icon }}</span>{{ name }}
+      </a>
+      {% endfor %}
+    </nav>
+    <div class="user-sidebar-footer">
+      <a class="nav-item-link" href="#account-menu" data-open-account><span class="nav-icon" aria-hidden="true">◎</span>Tài khoản</a>
+      <form action="{{ url_for('logout') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="nav-item-link" type="submit"><span class="nav-icon" aria-hidden="true">↪</span>Đăng xuất</button>
+      </form>
+    </div>
+  </div>
+</aside>

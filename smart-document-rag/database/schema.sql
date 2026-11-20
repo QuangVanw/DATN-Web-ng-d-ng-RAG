@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     document_id INT UNSIGNED NOT NULL,
     chunk_index INT UNSIGNED NOT NULL,
     content MEDIUMTEXT NOT NULL,
+    page_number SMALLINT UNSIGNED NULL,
     PRIMARY KEY (document_id, chunk_index),
     CONSTRAINT fk_document_chunks_document
         FOREIGN KEY (document_id) REFERENCES documents (id) ON DELETE CASCADE

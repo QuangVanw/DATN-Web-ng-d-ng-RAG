@@ -63,10 +63,6 @@ h2 { font-size: 1.25rem; font-weight: 720; margin: 0 0 .85rem; letter-spacing: -
 .bubble p { margin: .3rem 0 0; white-space: pre-wrap; }
 .chat-sources { padding: .75rem 0; }
 .auth-shell { max-width: 32rem; margin: 0 auto; padding: clamp(1rem, 8vh, 5rem) 1rem; }
-.auth-card { padding: clamp(1rem, 6vw, 2.5rem); }
-.auth-card h1 { margin-bottom: 1.5rem; }
-.auth-brand { margin-bottom: 1.1rem; }
-.auth-card form { display: grid; gap: 1rem; }
 @media (max-width: 767px) {
   .app-shell { display: block; }
   .sidebar { position: static; height: auto; padding: .8rem 1rem; gap: .75rem; }
@@ -85,3 +81,60 @@ h2 { font-size: 1.25rem; font-weight: 720; margin: 0 0 .85rem; letter-spacing: -
 .password-toggle svg { width: 1.25rem; height: 1.25rem; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; fill: none; }
 .password-toggle[aria-pressed="false"] .eye-off,
 .password-toggle[aria-pressed="true"] .eye-open { display: none; }
+
+/* Admin keeps a dark navigation rail with SmartDoc's teal accents. */
+.app-shell:not(.user-shell) {
+  --admin-primary: #0f766e;
+  --admin-dark: #134e4a;
+  --navy: #1e293b;
+  --blue: var(--admin-primary);
+  --ink: #0f172a;
+  --line: #e2e8f0;
+  color: var(--ink);
+  background: #f8fafc;
+}
+
+.app-shell:not(.user-shell) .brand-mark { background: var(--admin-primary); }
+.app-shell:not(.user-shell) .nav-item-link { color: #e2e8f0; }
+.app-shell:not(.user-shell) .nav-item-link:hover,
+.app-shell:not(.user-shell) .nav-item-link:focus-visible { background: #334155; color: #fff; }
+.app-shell:not(.user-shell) .nav-item-link.active { background: var(--admin-primary); color: #fff; }
+.app-shell:not(.user-shell) .sidebar-logout { border-color: #475569; }
+.app-shell:not(.user-shell) .menu-toggle { border-color: #94a3b8; }
+.app-shell:not(.user-shell) .welcome { background: linear-gradient(115deg, var(--admin-dark), var(--admin-primary)); }
+.app-shell:not(.user-shell) .welcome p { color: #ccfbf1; }
+.app-shell:not(.user-shell) .workspace a:not(.btn) { color: var(--admin-primary); }
+.app-shell:not(.user-shell) .format-pill { background: #ccfbf1; color: var(--admin-dark); }
+.app-shell:not(.user-shell) .btn-primary {
+  --bs-btn-bg: var(--admin-primary);
+  --bs-btn-border-color: var(--admin-primary);
+  --bs-btn-hover-bg: var(--admin-dark);
+  --bs-btn-hover-border-color: var(--admin-dark);
+  --bs-btn-active-bg: var(--admin-dark);
+  --bs-btn-active-border-color: var(--admin-dark);
+  --bs-btn-disabled-bg: var(--admin-primary);
+  --bs-btn-disabled-border-color: var(--admin-primary);
+  --bs-btn-focus-shadow-rgb: 15, 118, 110;
+}
+.app-shell:not(.user-shell) .btn-outline-primary {
+  --bs-btn-color: var(--admin-primary);
+  --bs-btn-border-color: var(--admin-primary);
+  --bs-btn-hover-bg: var(--admin-primary);
+  --bs-btn-hover-border-color: var(--admin-primary);
+  --bs-btn-active-bg: var(--admin-dark);
+  --bs-btn-active-border-color: var(--admin-dark);
+  --bs-btn-disabled-color: var(--admin-primary);
+  --bs-btn-disabled-border-color: var(--admin-primary);
+  --bs-btn-focus-shadow-rgb: 15, 118, 110;
+}
+.app-shell:not(.user-shell) .form-control:focus,
+.app-shell:not(.user-shell) .form-select:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 .2rem #0f766e25;
+}
+.app-shell:not(.user-shell) .file-picker { border-color: #85bcb3; background: #f0fdfa; }
+.app-shell:not(.user-shell) .file-picker:focus-within { outline-color: var(--admin-primary); }
+.app-shell:not(.user-shell) .upload-icon,
+.app-shell:not(.user-shell) .user-bubble { background: #ccfbf1; color: var(--admin-dark); }
+.app-shell:not(.user-shell) .table th,
+.app-shell:not(.user-shell) .document-text { background: #f8fafc; }
